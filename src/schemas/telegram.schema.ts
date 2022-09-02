@@ -8,17 +8,17 @@ export class Telegram {
   @Prop({ type: Date, default: Date.now() })
   createdAt: Date;
 
-  @Prop({ type: Number })
-  number: number;
+  @Prop({ type: String })
+  number: string;
 
-  @Prop({ type: Object })
+  @Prop({ type: String })
   sms: string;
 
   @Prop({ type: Number })
   funcionarioId: number;
 
-  @Prop({ type: Object })
-  aplicacion: string;
+  @Prop({ type: String })
+  app: string;
 
   @Prop({ type: Object })
   origen: any;
