@@ -9,7 +9,10 @@ export class Telegram {
   createdAt: Date;
 
   @Prop({ type: String })
-  number: string;
+  numero: string;
+
+  @Prop({ type: String })
+  destino: string;
 
   @Prop({ type: String })
   sms: string;
