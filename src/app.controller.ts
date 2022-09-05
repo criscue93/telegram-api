@@ -1,18 +1,25 @@
 import {
+  Body,
+  CACHE_MANAGER,
   Controller,
   Get,
-  Res,
   Inject,
-  CACHE_MANAGER,
-  Body,
+  Ip,
+  Param,
   Post,
+  Query,
+  Req,
+  Res,
 } from '@nestjs/common';
-import { Response } from 'express';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Response, Request } from 'express';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Cache } from 'cache-manager';
+import { codigoDTO, sendDTO } from './dto/telegram.dto';
 import { validate } from 'class-validator';
-import { codigoDTO } from './dto/telegram.dto';
+import { getIP } from './helpers/util.helper';
+import * as uaParser from 'ua-parser-js';
+import { userExists } from './helpers/userExists.helper';
 
 @ApiTags('SERVICIOS')
 @Controller()
@@ -24,30 +31,20 @@ export class AppController {
 
   @Get('/')
   @ApiOperation({
-    summary: 'Permite verificar si el microservicio esta funcionando',
+    summary: 'Permite verificar si el servicio está funcionando.',
   })
+  @ApiResponse({ status: 200, description: 'Ok' })
   getPing(@Res() res: Response) {
-    const response = {
-      error: false,
-      message:
-        'Bienvenido a los Microservicio TELEGRAM, basado en principios REST, devuelve metadatos JSON - Copyright © Ministerio Público.',
-      response: {
-        author: 'Ministerio Público',
-        dateTimeServer: new Date().toLocaleString(),
-        nameApp: 'TELEGRAM API',
-        version: '0.0.1',
-      },
-      status: 200,
-    };
+    const response = this.appService.getPing();
 
     return res.status(response.status).json(response);
   }
 
-  @Get('/loginCode')
+  @Get('/sendCode')
   @ApiOperation({
     summary: 'Servicio para enviar el código de autenticación a Telegram',
   })
-  async loginCode(@Res() res: Response) {
+  async sendCode(@Res() res: Response) {
     let response = {
       error: true,
       message: 'Existen problemas con el controlador loginCode',
@@ -57,9 +54,11 @@ export class AppController {
 
     try {
       response = await this.appService.loginCode();
+      await this.cacheManager.reset();
       await this.cacheManager.set(
         'hash_code',
         response.response['phone_code_hash'],
+        { ttl: 0 },
       );
     } catch (error) {
       response.response = error;
@@ -122,6 +121,197 @@ export class AppController {
     try {
       response = await this.appService.logout();
       await this.cacheManager.reset();
+    } catch (error) {
+      response.response = error;
+      response.status = 500;
+    }
+
+    return res.status(response.status).json(response);
+  }
+
+  @Get('/verify/:number')
+  @ApiOperation({
+    summary: 'Servicio para si el número tiene cuenta en Telegram',
+  })
+  async verifyNumber(@Res() res: Response, @Param('number') number: string) {
+    let response = {
+      error: true,
+      message: 'Existen problemas con el controlador logout',
+      response: {},
+      status: 422,
+    };
+
+    try {
+      response = await this.appService.addContact(
+        number,
+        'temporal',
+        'temporal',
+      );
+      response = userExists(response.response['users']);
+
+      if (response.status === 200) {
+        const user = response.response['users'].find(
+          (user) => user.phone == number,
+        );
+        const idHash = { user_id: user.id, hash: user.access_hash };
+        await this.appService.removeContact(idHash.user_id, idHash.hash);
+      }
+    } catch (error) {
+      response.response = error;
+      response.status = 500;
+    }
+
+    return res.status(response.status).json(response);
+  }
+
+  @Post('/send')
+  @ApiOperation({
+    summary: 'Servicio enviar mensajes por Telegram',
+  })
+  async sendMessage(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Ip() ip,
+    @Body() body: sendDTO,
+  ) {
+    let response = {
+      error: true,
+      message: 'Existen problemas con el controlador logout',
+      response: {},
+      status: 422,
+    };
+
+    const data = new sendDTO();
+    data.destino = body.destino;
+    data.sms = body.sms;
+    data.funcionarioId = body.funcionarioId;
+    data.aplicacion = body.aplicacion;
+
+    const valid = await validate(data);
+    if (valid.length > 0) {
+      const errorArray = valid.map((o) => ({
+        [o.property]: Object.values(o.constraints),
+      }));
+
+      response.error = true;
+      response.message = 'Error de validación';
+      response.response = errorArray;
+      response.status = 406;
+    } else {
+      try {
+        response = await this.appService.addContact(
+          data.destino,
+          'temporal',
+          'temporal',
+        );
+        userExists(response.response['users']);
+
+        const user = response.response['users'][0];
+        const idHash = { user_id: user.id, hash: user.access_hash };
+        response = await this.appService.sendMessage(
+          data.sms,
+          idHash.user_id,
+          idHash.hash,
+        );
+
+        let myNumber = 0;
+        const messages = await this.appService.getChat(
+          idHash.user_id,
+          idHash.hash,
+          2,
+        );
+        const main = messages.response['users'].find(
+          (user) => user.self == true,
+        );
+        myNumber = main.number;
+        await this.appService.removeContact(idHash.user_id, idHash.hash);
+
+        const headers = req.headers;
+        const agent = new uaParser(`${headers['user-agent']}`);
+        const userAgent = agent.getResult();
+        const logs = {
+          origenSms: {
+            numero: myNumber,
+            aplicacion: data.aplicacion,
+            funcionarioId: data.funcionarioId,
+          },
+          destinoSms: {
+            numero: user.phone,
+            sms: data.sms,
+          },
+          origen: {
+            ip: getIP(ip),
+            userAgent,
+          },
+        };
+        await this.appService.saveLogs(logs);
+      } catch (error) {
+        response.response = error;
+        response.status = 500;
+      }
+    }
+
+    return res.status(response.status).json(response);
+  }
+
+  @Get('/log/:number')
+  @ApiOperation({
+    summary: 'Servicio para devolver el log de chat de Telegram',
+  })
+  async getLogsByNumber(
+    @Res() res: Response,
+    @Param('number') number: string,
+    @Query('limit') limit: number,
+  ) {
+    let response = {
+      error: true,
+      message: 'Existen problemas con el controlador getLogsByNumber',
+      response: {},
+      status: 422,
+    };
+
+    try {
+      limit = limit && limit <= 100 ? limit : 10;
+      response = await this.appService.addContact(
+        number,
+        'temporal',
+        'temporal',
+      );
+      const exist = userExists(response.response['users']);
+
+      if (exist.error === false) {
+        const user = response.response['users'][0];
+        console.log(user);
+        const idHash = { user_id: user.id, hash: user.access_hash };
+        await this.appService.removeContact(idHash.user_id, idHash.hash);
+
+        const messages = await this.appService.getChat(
+          idHash.user_id,
+          idHash.hash,
+          limit,
+        );
+
+        const msg = messages.response['messages'].map((msg) => {
+          return {
+            _: msg._,
+            fecha: msg.date,
+            enviado: msg.out,
+            mensaje: msg.message,
+          };
+        });
+        const userLog = messages.response['users'][0];
+
+        response.error = false;
+        response.message = 'Logs extraidos correctamente';
+        response.response = {
+          usuario: {
+            nombre: userLog.first_name,
+            apellido: userLog.last_name,
+            numero: userLog.phone,
+          },
+          mensajes: msg,
+        };
+      }
     } catch (error) {
       response.response = error;
       response.status = 500;

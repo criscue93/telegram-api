@@ -3,7 +3,7 @@ import { IsDefined, IsInt, IsString } from 'class-validator';
 
 export class codigoDTO {
   @IsDefined({ message: 'El código es obligatorio' })
-  @IsInt({ message: 'El código tiene que ser un número entero' })
+  @IsString({ message: 'El código tiene que ser una cadena' })
   @ApiProperty()
   codigo: string;
 }
