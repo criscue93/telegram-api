@@ -38,7 +38,7 @@ export class AppService {
     };
 
     try {
-      const resp = await this.mtProto.mtProtoInstance.call('auth.sendCode', {
+      await this.mtProto.mtProtoInstance.call('auth.sendCode', {
         phone_number: `${process.env.APP_PHONE}`,
         settings: {
           _: 'codeSettings',
@@ -47,7 +47,7 @@ export class AppService {
 
       response.error = false;
       response.message = 'Se logró enviar el código correctamente';
-      response.response = resp;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       const { error_code, error_message } = error;
@@ -59,7 +59,7 @@ export class AppService {
           await this.mtProto.mtProtoInstance.setDefaultDc(dcId);
         }
 
-        const resp = await this.mtProto.mtProtoInstance.call('auth.sendCode', {
+        await this.mtProto.mtProtoInstance.call('auth.sendCode', {
           phone_number: `${process.env.APP_PHONE}`,
           settings: {
             _: 'codeSettings',
@@ -68,7 +68,7 @@ export class AppService {
 
         response.error = false;
         response.message = 'Se logró enviar el código correctamente';
-        response.response = resp;
+        response.response = {};
         response.status = 200;
       }
     }
@@ -85,11 +85,11 @@ export class AppService {
     };
 
     try {
-      const resp = await this.mtProto.mtProtoInstance.call('auth.logOut', {});
+      await this.mtProto.mtProtoInstance.call('auth.logOut', {});
 
       response.error = false;
       response.message = 'Se logró cerrar sesión correctamente';
-      response.response = resp;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       response.response = error;
@@ -108,7 +108,7 @@ export class AppService {
     };
 
     try {
-      const resp = await this.mtProto.mtProtoInstance.call('auth.signIn', {
+      await this.mtProto.mtProtoInstance.call('auth.signIn', {
         phone_number: process.env.APP_PHONE,
         phone_code_hash,
         phone_code,
@@ -116,7 +116,7 @@ export class AppService {
 
       response.error = false;
       response.message = 'Se logró iniciar sesión correctamente';
-      response.response = resp;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       response.response = error;
@@ -139,25 +139,22 @@ export class AppService {
     };
 
     try {
-      const resp = await this.mtProto.mtProtoInstance.call(
-        'contacts.importContacts',
-        {
-          contacts: [
-            {
-              _: 'inputPhoneContact',
-              client_id:
-                1 + Math.floor(Math.random() * (100000000 - 1000000) + 1000000),
-              phone,
-              first_name,
-              second_name,
-            },
-          ],
-        },
-      );
+      await this.mtProto.mtProtoInstance.call('contacts.importContacts', {
+        contacts: [
+          {
+            _: 'inputPhoneContact',
+            client_id:
+              1 + Math.floor(Math.random() * (100000000 - 1000000) + 1000000),
+            phone,
+            first_name,
+            second_name,
+          },
+        ],
+      });
 
       response.error = false;
       response.message = 'Se logró añadir al usuario correctamente';
-      response.response = resp;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       response.response = error;
@@ -177,16 +174,13 @@ export class AppService {
 
     try {
       const delUser = { _: 'inputUser', user_id, access_hash };
-      const resp = await this.mtProto.mtProtoInstance.call(
-        'contacts.deleteContacts',
-        {
-          id: [delUser],
-        },
-      );
+      await this.mtProto.mtProtoInstance.call('contacts.deleteContacts', {
+        id: [delUser],
+      });
 
       response.error = false;
       response.message = 'Se logró eliminar el usuario correctamente';
-      response.response = resp;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       response.response = error;
@@ -212,22 +206,19 @@ export class AppService {
       const random_id = Math.floor(
         Math.random() * (100000000 - 1000000) + 1000000,
       );
-      const resp = await this.mtProto.mtProtoInstance.call(
-        'messages.sendMessage',
-        {
-          message,
-          peer: {
-            _: 'inputPeerUser',
-            user_id,
-            access_hash,
-          },
-          random_id,
+      await this.mtProto.mtProtoInstance.call('messages.sendMessage', {
+        message,
+        peer: {
+          _: 'inputPeerUser',
+          user_id,
+          access_hash,
         },
-      );
+        random_id,
+      });
 
       response.error = false;
       response.message = 'Se logró enviar el mensaje correctamente';
-      response.response = resp;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       response.response = error;
@@ -250,18 +241,15 @@ export class AppService {
     };
 
     try {
-      const resp = await this.mtProto.mtProtoInstance.call(
-        'messages.getHistory',
-        {
-          peer: { _: 'inputPeerUser', user_id, access_hash },
-          max_id: -1,
-          limit,
-        },
-      );
+      await this.mtProto.mtProtoInstance.call('messages.getHistory', {
+        peer: { _: 'inputPeerUser', user_id, access_hash },
+        max_id: -1,
+        limit,
+      });
 
       response.error = false;
       response.message = 'Se logró obtener el chat del usuario correctamente';
-      response.response = resp;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       response.response = error;
@@ -281,11 +269,11 @@ export class AppService {
 
     try {
       const loglink = new this.telegramDocument(data);
-      const save = await loglink.save();
+      await loglink.save();
 
       response.error = false;
       response.message = 'Se registraron los logs correctamente';
-      response.response = save;
+      response.response = {};
       response.status = 200;
     } catch (error) {
       response.response = error;
