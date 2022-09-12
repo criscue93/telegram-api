@@ -38,7 +38,7 @@ export class AppService {
     };
 
     try {
-      await this.mtProto.mtProtoInstance.call('auth.sendCode', {
+      const codigo = await this.mtProto.mtProtoInstance.call('auth.sendCode', {
         phone_number: `${process.env.APP_PHONE}`,
         settings: {
           _: 'codeSettings',
@@ -47,7 +47,7 @@ export class AppService {
 
       response.error = false;
       response.message = 'Se logró enviar el código correctamente';
-      response.response = {};
+      response.response = codigo;
       response.status = 200;
     } catch (error) {
       const { error_code, error_message } = error;
@@ -139,22 +139,25 @@ export class AppService {
     };
 
     try {
-      await this.mtProto.mtProtoInstance.call('contacts.importContacts', {
-        contacts: [
-          {
-            _: 'inputPhoneContact',
-            client_id:
-              1 + Math.floor(Math.random() * (100000000 - 1000000) + 1000000),
-            phone,
-            first_name,
-            second_name,
-          },
-        ],
-      });
+      const user = await this.mtProto.mtProtoInstance.call(
+        'contacts.importContacts',
+        {
+          contacts: [
+            {
+              _: 'inputPhoneContact',
+              client_id:
+                1 + Math.floor(Math.random() * (100000000 - 1000000) + 1000000),
+              phone,
+              first_name,
+              second_name,
+            },
+          ],
+        },
+      );
 
       response.error = false;
       response.message = 'Se logró añadir al usuario correctamente';
-      response.response = {};
+      response.response = user;
       response.status = 200;
     } catch (error) {
       response.response = error;
@@ -206,6 +209,7 @@ export class AppService {
       const random_id = Math.floor(
         Math.random() * (100000000 - 1000000) + 1000000,
       );
+
       await this.mtProto.mtProtoInstance.call('messages.sendMessage', {
         message,
         peer: {
@@ -241,15 +245,18 @@ export class AppService {
     };
 
     try {
-      await this.mtProto.mtProtoInstance.call('messages.getHistory', {
-        peer: { _: 'inputPeerUser', user_id, access_hash },
-        max_id: -1,
-        limit,
-      });
+      const chat = await this.mtProto.mtProtoInstance.call(
+        'messages.getHistory',
+        {
+          peer: { _: 'inputPeerUser', user_id, access_hash },
+          max_id: -1,
+          limit,
+        },
+      );
 
       response.error = false;
       response.message = 'Se logró obtener el chat del usuario correctamente';
-      response.response = {};
+      response.response = chat;
       response.status = 200;
     } catch (error) {
       response.response = error;

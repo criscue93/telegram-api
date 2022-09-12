@@ -150,12 +150,15 @@ export class AppController {
       response = userExists(response.response['users']);
 
       if (response.status === 200) {
-        const user = response.response['users'].find(
-          (user) => user.phone == number,
-        );
+        const user = response.response[0];
         const idHash = { user_id: user.id, hash: user.access_hash };
         await this.appService.removeContact(idHash.user_id, idHash.hash);
       }
+
+      response.error = false;
+      response.message = 'El usuario tiene una cuenta en Telegram';
+      response.response = {};
+      response.status = 200;
     } catch (error) {
       response.response = error;
       response.status = 500;
@@ -277,11 +280,10 @@ export class AppController {
         'temporal',
         'temporal',
       );
-      const exist = userExists(response.response['users']);
+      response = userExists(response.response['users']);
 
-      if (exist.error === false) {
-        const user = response.response['users'][0];
-        console.log(user);
+      if (response.status === 200) {
+        const user = response.response[0];
         const idHash = { user_id: user.id, hash: user.access_hash };
         await this.appService.removeContact(idHash.user_id, idHash.hash);
 
