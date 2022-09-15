@@ -18,7 +18,6 @@ export class sendDTO {
   @ApiProperty()
   sms: string;
 
-  @IsDefined({ message: 'El id del funcionario es obligatorio' })
   @IsInt({ message: 'El id del funcionario tiene que ser un número' })
   @ApiProperty()
   funcionarioId: number;

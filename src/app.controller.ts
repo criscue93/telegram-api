@@ -4,21 +4,17 @@ import {
   Controller,
   Get,
   Inject,
-  Ip,
   Param,
   Post,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Cache } from 'cache-manager';
 import { codigoDTO, sendDTO } from './dto/telegram.dto';
 import { validate } from 'class-validator';
-import { getIP } from './helpers/util.helper';
-import * as uaParser from 'ua-parser-js';
 import { userExists } from './helpers/userExists.helper';
 
 @ApiTags('SERVICIOS')
@@ -171,12 +167,7 @@ export class AppController {
   @ApiOperation({
     summary: 'Servicio enviar mensajes por Telegram',
   })
-  async sendMessage(
-    @Res() res: Response,
-    @Req() req: Request,
-    @Ip() ip,
-    @Body() body: sendDTO,
-  ) {
+  async sendMessage(@Res() res: Response, @Body() body: sendDTO) {
     let response = {
       error: true,
       message: 'Existen problemas con el controlador logout',
@@ -217,6 +208,11 @@ export class AppController {
           idHash.hash,
         );
 
+        let estadoEnvio = false;
+        if (response.error === false) {
+          estadoEnvio = true;
+        }
+
         let myNumber = 0;
         const messages = await this.appService.getChat(
           idHash.user_id,
@@ -226,26 +222,21 @@ export class AppController {
         const main = messages.response['users'].find(
           (user) => user.self == true,
         );
-        myNumber = main.number;
+        myNumber = main.phone;
         await this.appService.removeContact(idHash.user_id, idHash.hash);
 
-        const headers = req.headers;
-        const agent = new uaParser(`${headers['user-agent']}`);
-        const userAgent = agent.getResult();
         const logs = {
-          origenSms: {
-            numero: myNumber,
-            aplicacion: data.aplicacion,
-            funcionarioId: data.funcionarioId,
-          },
-          destinoSms: {
-            numero: user.phone,
-            sms: data.sms,
-          },
           origen: {
-            ip: getIP(ip),
-            userAgent,
+            numero: myNumber,
+            app_nombre: data.aplicacion,
+            funcionario: data.funcionarioId,
           },
+          destino: {
+            numero: user.phone,
+            mensaje: data.sms,
+            fichero: false,
+          },
+          enviado: estadoEnvio,
         };
         await this.appService.saveLogs(logs);
       } catch (error) {

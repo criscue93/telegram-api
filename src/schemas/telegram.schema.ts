@@ -9,13 +9,13 @@ export class Telegram {
   createdAt: Date;
 
   @Prop({ type: Object })
-  origenSms: any;
-
-  @Prop({ type: Object })
-  destinoSms: any;
-
-  @Prop({ type: Object })
   origen: any;
+
+  @Prop({ type: Object })
+  destino: any;
+
+  @Prop({ type: Boolean })
+  enviado: boolean;
 }
 
 export const TelegramSchema = SchemaFactory.createForClass(Telegram);
