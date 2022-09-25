@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDefined, IsInt, IsString } from 'class-validator';
+import { IsBoolean, IsDefined, IsInt, IsString } from 'class-validator';
 
 export class codigoDTO {
   @IsDefined({ message: 'El código es obligatorio' })
@@ -26,4 +26,8 @@ export class sendDTO {
   @IsString({ message: 'El nombre de la aplicación debe ser una cadena' })
   @ApiProperty()
   aplicacion: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  guardar: boolean;
 }

@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Res,
+  Version,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -17,7 +18,7 @@ import { codigoDTO, sendDTO } from './dto/telegram.dto';
 import { validate } from 'class-validator';
 import { userExists } from './helpers/userExists.helper';
 
-@ApiTags('SERVICIOS')
+@ApiTags('SERVICES TELEGRAM')
 @Controller()
 export class AppController {
   constructor(
@@ -36,6 +37,7 @@ export class AppController {
     return res.status(response.status).json(response);
   }
 
+  @Version('1')
   @Get('/sendCode')
   @ApiOperation({
     summary: 'Servicio para enviar el código de autenticación a Telegram',
@@ -64,6 +66,7 @@ export class AppController {
     return res.status(response.status).json(response);
   }
 
+  @Version('1')
   @Post('/login')
   @ApiOperation({
     summary: 'Servicio para iniciar sesión con el código enviado a Telegram',
@@ -102,6 +105,7 @@ export class AppController {
     return res.status(response.status).json(response);
   }
 
+  @Version('1')
   @Get('/logout')
   @ApiOperation({
     summary: 'Servicio para cerrar sesión a Telegram',
@@ -125,6 +129,7 @@ export class AppController {
     return res.status(response.status).json(response);
   }
 
+  @Version('1')
   @Get('/verify/:number')
   @ApiOperation({
     summary: 'Servicio para si el número tiene cuenta en Telegram',
@@ -163,6 +168,7 @@ export class AppController {
     return res.status(response.status).json(response);
   }
 
+  @Version('1')
   @Post('/send')
   @ApiOperation({
     summary: 'Servicio enviar mensajes por Telegram',
@@ -180,6 +186,7 @@ export class AppController {
     data.sms = body.sms;
     data.funcionarioId = body.funcionarioId;
     data.aplicacion = body.aplicacion;
+    data.guardar = body.guardar;
 
     const valid = await validate(data);
     if (valid.length > 0) {
@@ -225,20 +232,22 @@ export class AppController {
         myNumber = main.phone;
         await this.appService.removeContact(idHash.user_id, idHash.hash);
 
-        const logs = {
-          origen: {
-            numero: myNumber,
-            app_nombre: data.aplicacion,
-            funcionario: data.funcionarioId,
-          },
-          destino: {
-            numero: user.phone,
-            mensaje: data.sms,
-            fichero: false,
-          },
-          enviado: estadoEnvio,
-        };
-        await this.appService.saveLogs(logs);
+        if (data.guardar === true) {
+          const logs = {
+            origen: {
+              numero: myNumber,
+              app_nombre: data.aplicacion,
+              funcionario: data.funcionarioId,
+            },
+            destino: {
+              numero: user.phone,
+              mensaje: data.sms,
+              fichero: false,
+            },
+            enviado: estadoEnvio,
+          };
+          await this.appService.saveLogs(logs);
+        }
       } catch (error) {
         response.response = error;
         response.status = 500;
@@ -248,7 +257,8 @@ export class AppController {
     return res.status(response.status).json(response);
   }
 
-  @Get('/log/:number')
+  @Version('1')
+  @Get('/logs/:number')
   @ApiOperation({
     summary: 'Servicio para devolver el log de chat de Telegram',
   })

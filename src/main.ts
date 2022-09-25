@@ -1,10 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('TELEGRAM - API')
