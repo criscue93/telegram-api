@@ -46,7 +46,7 @@ Las credenciales junto al enlace a la base de datos en MongoDB se tienen que col
 ### Envio del código para iniciar sesión
 
 ```bash
-EndPoint: GET - url/api/sendCode
+EndPoint: GET - url/api/v1/sendCode
 Envía un código al número de celular registrado, este código servirá para el inicio de sesión.
 ```
 
@@ -57,7 +57,7 @@ Si no se puede iniciar sesión, primero hacer un logout y después enviar utiliz
 ### Inicio de sesión
 
 ```bash
-EndPoint: POST - url/api/login
+EndPoint: POST - url/api/v1/login
 { "codigo": XXXXX }
 Se envía el código como parámetro para el inicio de sesión.
 ```
@@ -65,21 +65,21 @@ Se envía el código como parámetro para el inicio de sesión.
 ### Cerrar sesión
 
 ```bash
-EndPoint: GET - url/api/logout
+EndPoint: GET - url/api/v1/logout
 Cierra la sesión del usuario registrado.
 ```
 
 ### Verificar si un número tiene cuenta en Telegram
 
 ```bash
-EndPoint: GET - url/api/verify/{number}
+EndPoint: GET - url/api/v1/verify/{number}
 Se manda como dato el número del que se quiere saber si esta o no registrado en Telegram
 ```
 
 ### Envío de mensajes
 
 ```bash
-EndPoint: POST - url/api/send
+EndPoint: POST - url/api/v1/send
 {
     "destino": "numero de celular",
     "sms": "mensaje a enviar",
@@ -93,7 +93,7 @@ Se mandan como datos, los mencionados anteriormente para el envío de los mensaj
 ### Historial de mensajes enviados
 
 ```bash
-EndPoint: GET - url/api/logs/{number}
+EndPoint: GET - url/api/v1/logs/{number}
 Se manda como dato el número del que se requiere saber el historial de sms enviados, además de un número como límite de mensajes a mostrar.
 ```
 
