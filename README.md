@@ -93,7 +93,7 @@ Se mandan como datos, los mencionados anteriormente para el envío de los mensaj
 ### Historial de mensajes enviados
 
 ```bash
-EndPoint: GET - url/api/log/{number}
+EndPoint: GET - url/api/logs/{number}
 Se manda como dato el número del que se requiere saber el historial de sms enviados, además de un número como límite de mensajes a mostrar.
 ```
 
