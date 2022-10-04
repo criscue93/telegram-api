@@ -134,7 +134,7 @@ export class AppController {
   @ApiOperation({
     summary: 'Servicio para si el número tiene cuenta en Telegram',
   })
-  async verifyNumber(@Res() res: Response, @Param('number') number: string) {
+  async verifyNumber(@Res() res: Response, @Param('number') number: number) {
     let response = {
       error: true,
       message: 'Existen problemas con el controlador logout',
@@ -156,10 +156,9 @@ export class AppController {
         await this.appService.removeContact(idHash.user_id, idHash.hash);
       }
 
-      response.error = false;
-      response.message = 'El usuario tiene una cuenta en Telegram';
-      response.response = {};
-      response.status = 200;
+      if (response.error === false) {
+        response.response = {};
+      }
     } catch (error) {
       response.response = error;
       response.status = 500;
@@ -264,7 +263,7 @@ export class AppController {
   })
   async getLogsByNumber(
     @Res() res: Response,
-    @Param('number') number: string,
+    @Param('number') number: number,
     @Query('limit') limit: number,
   ) {
     let response = {

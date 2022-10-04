@@ -9,9 +9,9 @@ export class codigoDTO {
 }
 export class sendDTO {
   @IsDefined({ message: 'El número del destinatario es obligatorio' })
-  @IsString({ message: 'El número del destinatario tiene que ser una cadena' })
+  @IsInt({ message: 'El número del destinatario tiene que ser un número' })
   @ApiProperty()
-  destino: string;
+  destino: number;
 
   @IsDefined({ message: 'El sms es obligatorio' })
   @IsString({ message: 'El sms tiene que ser una cadena' })

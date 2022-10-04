@@ -127,7 +127,7 @@ export class AppService {
   }
 
   async addContact(
-    phone: string,
+    phone: number,
     first_name: 'temporal',
     second_name: 'temporal',
   ): Promise<IResponse> {
