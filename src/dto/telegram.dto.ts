@@ -11,21 +11,15 @@ export class sendDTO {
   @IsDefined({ message: 'El número del destinatario es obligatorio' })
   @IsInt({ message: 'El número del destinatario tiene que ser un número' })
   @ApiProperty()
-  destino: number;
+  celular: number;
 
   @IsDefined({ message: 'El sms es obligatorio' })
   @IsString({ message: 'El sms tiene que ser una cadena' })
   @ApiProperty()
-  sms: string;
+  mensaje: string;
 
-  @IsInt({ message: 'El id del funcionario tiene que ser un número' })
   @ApiProperty()
-  funcionarioId: number;
-
-  @IsDefined({ message: 'El nombre de la aplicación es obligatorio' })
-  @IsString({ message: 'El nombre de la aplicación debe ser una cadena' })
-  @ApiProperty()
-  aplicacion: string;
+  adjuntos: any[];
 
   @ApiProperty()
   @IsBoolean()

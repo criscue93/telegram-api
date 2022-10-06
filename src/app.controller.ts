@@ -11,7 +11,7 @@ import {
   Version,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Cache } from 'cache-manager';
 import { codigoDTO, sendDTO } from './dto/telegram.dto';
@@ -70,6 +70,16 @@ export class AppController {
   @Post('/login')
   @ApiOperation({
     summary: 'Servicio para iniciar sesión con el código enviado a Telegram',
+  })
+  @ApiBody({
+    schema: {
+      properties: {
+        codigo: {
+          type: 'string',
+          example: 'dadgoie123',
+        },
+      },
+    },
   })
   async login(@Res() res: Response, @Body() body: codigoDTO) {
     let response = {
@@ -172,6 +182,28 @@ export class AppController {
   @ApiOperation({
     summary: 'Servicio enviar mensajes por Telegram',
   })
+  @ApiBody({
+    schema: {
+      properties: {
+        celular: {
+          type: 'number',
+          example: 59168452456,
+        },
+        mensaje: {
+          type: 'string',
+          example: 'Mensaje de prueba',
+        },
+        adjuntos: {
+          type: 'object',
+          example: [],
+        },
+        guardar: {
+          type: 'boolean',
+          example: true,
+        },
+      },
+    },
+  })
   async sendMessage(@Res() res: Response, @Body() body: sendDTO) {
     let response = {
       error: true,
@@ -181,10 +213,9 @@ export class AppController {
     };
 
     const data = new sendDTO();
-    data.destino = body.destino;
-    data.sms = body.sms;
-    data.funcionarioId = body.funcionarioId;
-    data.aplicacion = body.aplicacion;
+    data.celular = body.celular;
+    data.mensaje = body.mensaje;
+    data.adjuntos = body.adjuntos;
     data.guardar = body.guardar;
 
     const valid = await validate(data);
@@ -200,7 +231,7 @@ export class AppController {
     } else {
       try {
         response = await this.appService.addContact(
-          data.destino,
+          data.celular,
           'temporal',
           'temporal',
         );
@@ -209,7 +240,7 @@ export class AppController {
         const user = response.response['users'][0];
         const idHash = { user_id: user.id, hash: user.access_hash };
         response = await this.appService.sendMessage(
-          data.sms,
+          data.mensaje,
           idHash.user_id,
           idHash.hash,
         );
@@ -232,16 +263,18 @@ export class AppController {
         await this.appService.removeContact(idHash.user_id, idHash.hash);
 
         if (data.guardar === true) {
+          let fichero = true;
+          if (data.adjuntos.length === 0) {
+            fichero = false;
+          }
           const logs = {
             origen: {
               numero: myNumber,
-              app_nombre: data.aplicacion,
-              funcionario: data.funcionarioId,
             },
             destino: {
               numero: user.phone,
-              mensaje: data.sms,
-              fichero: false,
+              mensaje: data.mensaje,
+              fichero,
             },
             enviado: estadoEnvio,
           };
